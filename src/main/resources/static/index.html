@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LLM RAG Portfolio</title>
+  </head>
+  <body>
+    <h2>Spring Boot API 연결 테스트</h2>
+
+    <button id="apiButton">API 호출하기</button>
+    <pre id="apiResult">아직 호출하지 않았습니다.</pre>
+
+    <script>
+      document
+        .getElementById("apiButton")
+        .addEventListener("click", async () => {
+          const result = document.getElementById("apiResult");
+          result.textContent = "API 호출 중...";
+
+          try {
+            const response = await fetch("http://localhost:8080/api/status");
+
+            if (!response.ok) {
+              throw new Error("HTTP 오류: " + response.status);
+            }
+
+            const data = await response.json();
+            result.textContent = JSON.stringify(data, null, 2);
+          } catch (error) {
+            result.textContent =
+              "API 호출 실패: " +
+              error.message +
+              "\n브라우저 개발자 도구의 Console도 확인하세요.";
+          }
+        });
+    </script>
+  </body>
+</html>
