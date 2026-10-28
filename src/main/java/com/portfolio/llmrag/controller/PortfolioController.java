@@ -8,9 +8,21 @@ import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.portfolio.llmrag.service.DocumentStorageService;
+import com.portfolio.llmrag.service.StoredFileInfo;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.ResponseEntity;
+import java.io.IOException;
+import java.util.List;
+
 @RestController
 public class PortfolioController {
-    
+    private final DocumentStorageService storageService;
+
+    public PortfolioController(DocumentStorageService storageService) {
+        this.storageService = storageService;
+    }
+
     @GetMapping("/api/hello")
     public String hello() {
         return "LLM RAG Portfolio API is running!";
@@ -26,12 +38,12 @@ public class PortfolioController {
     }
 
     @GetMapping("/api/documents")
-    public List<DocumentDto> getDocuments() {
-        return List.of(
-            new DocumentDto(1L, "RAG 개념 정리", "PDF"),
-            new DocumentDto(2L, "Spring Boot 개발 가이드", "PDF"),
-            new DocumentDto(3L, "LLM 기초 학습 노트", "TXT")
+    public ResponseEntity<List<StoredFileInfo>> getDocuments()
+            throws IOException {
 
-        );
+        List<StoredFileInfo> documents =
+                storageService.listStoredFiles();
+
+        return ResponseEntity.ok(documents);
     }
 }

@@ -35,9 +35,7 @@ public class DocumentStorageService {
         Files.createDirectories(uploadDir);
 
         String originalName = file.getOriginalFilename();
-        String extension = originalName.substring(
-                originalName.lastIndexOf(".")
-        ).toLowerCase();
+        String extension = originalName.substring(originalName.lastIndexOf(".")).toLowerCase();
 
         String storedName = UUID.randomUUID() + extension;
         Path target = uploadDir.resolve(storedName).normalize();
@@ -59,7 +57,7 @@ public class DocumentStorageService {
 
 
 
-public List<StoredFileInfo> listStoredFiles() throws IOException {
+    public List<StoredFileInfo> listStoredFiles() throws IOException {
 
         List<StoredFileInfo> result = new ArrayList<>();
 
