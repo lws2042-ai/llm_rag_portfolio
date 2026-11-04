@@ -12,11 +12,6 @@ public class StatusController {
 
     private static final String VERSION = "1.1.0";
 
-    @GetMapping("/api/hello")
-    public String hello() {
-        return "LLM RAG Portfolio API is running!";
-    }
-
     @GetMapping("/api/status")
     public ApiResponse<String> status() {
         return ApiResponse.ok("LLM RAG Portfolio API is running!", VERSION);
