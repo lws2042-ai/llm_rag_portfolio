@@ -48,7 +48,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiResponse<Void>> tooLarge(MaxUploadSizeExceededException e) {
-        return respond(HttpStatus.PAYLOAD_TOO_LARGE, "파일은 20MB까지 업로드할 수 있습니다.");
+        return respond(HttpStatus.CONTENT_TOO_LARGE, "파일은 20MB까지 업로드할 수 있습니다.");
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
