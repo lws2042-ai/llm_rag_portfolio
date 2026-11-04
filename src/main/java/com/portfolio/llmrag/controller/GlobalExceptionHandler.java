@@ -2,6 +2,7 @@ package com.portfolio.llmrag.controller;
 
 import com.portfolio.llmrag.dto.ApiResponse;
 import com.portfolio.llmrag.exception.DocumentNotFoundException;
+import com.portfolio.llmrag.exception.InvalidDocumentStateException;
 import com.portfolio.llmrag.exception.InvalidFileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DocumentNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> notFound(DocumentNotFoundException e) {
         return respond(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidDocumentStateException.class)
+    public ResponseEntity<ApiResponse<Void>> invalidState(InvalidDocumentStateException e) {
+        return respond(HttpStatus.CONFLICT, e.getMessage());
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)

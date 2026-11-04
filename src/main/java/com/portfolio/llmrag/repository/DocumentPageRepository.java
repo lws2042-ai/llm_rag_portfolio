@@ -58,6 +58,19 @@ public class DocumentPageRepository {
                         rs.getString("preview")));
     }
 
+    /** 청크를 다시 만들 때 쓰는 페이지 전체 텍스트 (페이지 순) */
+    public List<PageText> findAll(long documentId) {
+        String sql = """
+                SELECT page_number, content
+                  FROM document_pages
+                 WHERE document_id = :documentId
+                 ORDER BY page_number
+                """;
+        return jdbc.query(sql,
+                new MapSqlParameterSource("documentId", documentId),
+                (rs, rowNum) -> new PageText(rs.getInt("page_number"), rs.getString("content")));
+    }
+
     public Optional<String> findContent(long documentId, int pageNumber) {
         String sql = """
                 SELECT content

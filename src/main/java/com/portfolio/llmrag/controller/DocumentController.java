@@ -2,6 +2,7 @@ package com.portfolio.llmrag.controller;
 
 import com.portfolio.llmrag.domain.DocumentStatus;
 import com.portfolio.llmrag.dto.ApiResponse;
+import com.portfolio.llmrag.dto.ChunkDto;
 import com.portfolio.llmrag.dto.DocumentDto;
 import com.portfolio.llmrag.dto.PageDetailDto;
 import com.portfolio.llmrag.dto.PageSummaryDto;
@@ -40,9 +41,10 @@ public class DocumentController {
             throws IOException {
         DocumentDto document = documentService.upload(file);
 
-        String message = document.status() == DocumentStatus.EXTRACTED
-                ? "업로드 및 텍스트 추출이 완료되었습니다. (" + document.pageCount() + "쪽)"
-                : "업로드는 되었지만 텍스트 추출에 실패했습니다: " + document.failReason();
+        String message = document.status() == DocumentStatus.CHUNKED
+                ? "업로드, 텍스트 추출, 청크 분할이 완료되었습니다. ("
+                        + document.pageCount() + "쪽, 청크 " + document.chunkCount() + "개)"
+                : "업로드는 되었지만 처리에 실패했습니다: " + document.failReason();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(message, document));
     }
@@ -72,5 +74,19 @@ public class DocumentController {
     public ApiResponse<PageDetailDto> page(@PathVariable("id") long id,
                                            @PathVariable("pageNumber") int pageNumber) {
         return ApiResponse.ok("조회 성공", documentService.getPage(id, pageNumber));
+    }
+
+    /** 청크 목록 (본문 포함) */
+    @GetMapping("/{id}/chunks")
+    public ApiResponse<List<ChunkDto>> chunks(@PathVariable("id") long id) {
+        List<ChunkDto> chunks = documentService.listChunks(id);
+        return ApiResponse.ok("청크 " + chunks.size() + "개", chunks);
+    }
+
+    /** 저장된 페이지 텍스트로 청크를 다시 만든다 */
+    @PostMapping("/{id}/chunks")
+    public ApiResponse<DocumentDto> rechunk(@PathVariable("id") long id) {
+        DocumentDto document = documentService.rechunk(id);
+        return ApiResponse.ok("청크를 다시 만들었습니다. (청크 " + document.chunkCount() + "개)", document);
     }
 }

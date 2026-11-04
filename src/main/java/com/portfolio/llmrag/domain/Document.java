@@ -14,6 +14,7 @@ public record Document(
         long sizeBytes,
         DocumentStatus status,
         Integer pageCount,
+        Integer chunkCount,
         String failReason,
         LocalDateTime uploadedAt,
         LocalDateTime updatedAt

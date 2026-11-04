@@ -23,7 +23,7 @@ public class DocumentRepository {
 
     private static final String SELECT_COLUMNS = """
             SELECT id, original_name, stored_name, extension, size_bytes,
-                   status, page_count, fail_reason, uploaded_at, updated_at
+                   status, page_count, chunk_count, fail_reason, uploaded_at, updated_at
               FROM documents
             """;
 
@@ -35,6 +35,7 @@ public class DocumentRepository {
             rs.getLong("size_bytes"),
             DocumentStatus.valueOf(rs.getString("status")),
             rs.getObject("page_count") == null ? null : rs.getInt("page_count"),
+            rs.getObject("chunk_count") == null ? null : rs.getInt("chunk_count"),
             rs.getString("fail_reason"),
             toLocalDateTime(rs.getTimestamp("uploaded_at")),
             toLocalDateTime(rs.getTimestamp("updated_at"))
@@ -93,6 +94,19 @@ public class DocumentRepository {
         jdbc.update(sql, new MapSqlParameterSource()
                 .addValue("status", DocumentStatus.EXTRACTED.name())
                 .addValue("pageCount", pageCount)
+                .addValue("id", id));
+    }
+
+    public void markChunked(long id, int chunkCount) {
+        String sql = """
+                UPDATE documents
+                   SET status = :status, chunk_count = :chunkCount, fail_reason = NULL,
+                       updated_at = SYSTIMESTAMP
+                 WHERE id = :id
+                """;
+        jdbc.update(sql, new MapSqlParameterSource()
+                .addValue("status", DocumentStatus.CHUNKED.name())
+                .addValue("chunkCount", chunkCount)
                 .addValue("id", id));
     }
 
