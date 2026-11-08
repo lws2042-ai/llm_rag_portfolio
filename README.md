@@ -10,17 +10,24 @@
 | 1    | PDF·TXT 업로드 (확장자·크기 검증, UUID 파일명 저장)  | 완료 |
 | 2    | 페이지별 텍스트 추출 및 Oracle 저장                  | 완료 |
 | 3    | 텍스트 청크 분할 (문장 단위, 페이지 경계 유지, 겹침) | 완료 |
-| 4    | 임베딩 생성                                          | 예정 |
+| 4    | 임베딩 생성 (Ollama + bge-m3, 로컬)                  | 진행 중 (모델 연결 완료) |
 | 5    | 벡터 저장 및 유사도 검색                             | 예정 |
 | 6    | LLM 연동 (검색 결과를 근거로 답변 생성)              | 예정 |
 | 7    | 출처 표시 및 오류 처리                               | 예정 |
 
 ## 기술 스택
 
-- Java 21, Spring Boot 4.0 (Web MVC, JDBC)
+- Java 21, Spring Boot 4.1 (Web MVC, JDBC)
 - Oracle Database (`ojdbc11`, `NamedParameterJdbcTemplate`)
 - Apache PDFBox 3.0 (PDF 텍스트 추출)
+- Spring AI 2.0 + Ollama `bge-m3` (임베딩, 1024차원)
 - Gradle
+
+### 임베딩 모델로 bge-m3 를 고른 이유
+
+- 한국어를 포함한 다국어 검색 성능이 좋습니다.
+- Ollama 로 내 PC에서 실행하므로 문서가 외부 API로 나가지 않습니다. 외부망이 막힌 사내(폐쇄망) 환경에서도 그대로 쓸 수 있습니다.
+- API 키나 사용료가 없습니다.
 
 ## 문서 처리 흐름
 
@@ -69,7 +76,14 @@ docker exec -it oracle-free sqlplus rag/<비밀번호>@//localhost/FREEPDB1 "@/t
 
 2단계 스키마로 이미 테이블을 만들었다면 [03-add-chunks.sql](src/main/resources/db/migration/03-add-chunks.sql)만 추가로 실행합니다.
 
-### 2. 접속 정보 설정
+### 2. Ollama 준비 (임베딩)
+
+```powershell
+docker run -d --name ollama -p 11434:11434 -v ollama:/root/.ollama ollama/ollama
+docker exec ollama ollama pull bge-m3   # 약 1.2GB
+```
+
+### 3. 접속 정보 설정
 
 비밀번호는 코드에 넣지 않고 환경변수로 넘깁니다.
 
@@ -78,6 +92,7 @@ docker exec -it oracle-free sqlplus rag/<비밀번호>@//localhost/FREEPDB1 "@/t
 | `DB_URL`      | `jdbc:oracle:thin:@//localhost:1521/FREEPDB1` |
 | `DB_USERNAME` | `rag`                                         |
 | `DB_PASSWORD` | (필수)                                        |
+| `OLLAMA_URL`  | `http://localhost:11434`                      |
 
 ```powershell
 $env:DB_PASSWORD = "비밀번호"
@@ -86,13 +101,14 @@ $env:DB_PASSWORD = "비밀번호"
 
 브라우저에서 http://localhost:8080/ 에 접속하면 서버 상태를 확인할 수 있습니다. 업로드는 아래 API를 curl 등으로 호출합니다.
 
-### 3. 빌드·테스트
+### 4. 빌드·테스트
 
 ```powershell
 .\gradlew.bat clean build
 ```
 
-`LlmRagPortfolioApplicationTests`는 스프링 컨텍스트 전체를 띄우므로 Oracle이 실행 중이고 `DB_PASSWORD`가 설정돼 있어야 통과합니다.
+- `LlmRagPortfolioApplicationTests`는 스프링 컨텍스트 전체를 띄우므로 Oracle이 실행 중이고 `DB_PASSWORD`가 설정돼 있어야 통과합니다.
+- `OllamaEmbeddingTest`는 Ollama가 `localhost:11434`에서 실행 중일 때만 돌고, 아니면 건너뜁니다.
 
 ## API
 

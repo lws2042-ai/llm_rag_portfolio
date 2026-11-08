@@ -1,6 +1,6 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '4.0.8'
+	id 'org.springframework.boot' version '4.1.2'   // Spring AI 2.0.x 는 Boot 4.1 기준
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -17,10 +17,21 @@ repositories {
 	mavenCentral()
 }
 
+ext {
+	set('springAiVersion', '2.0.2')
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+	}
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 	implementation 'org.apache.pdfbox:pdfbox:3.0.6'
+	implementation 'org.springframework.ai:spring-ai-starter-model-ollama'   // 로컬 임베딩 (bge-m3)
 	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
 
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
