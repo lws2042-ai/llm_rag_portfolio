@@ -2,6 +2,7 @@ package com.portfolio.llmrag.controller;
 
 import com.portfolio.llmrag.dto.ApiResponse;
 import com.portfolio.llmrag.exception.DocumentNotFoundException;
+import com.portfolio.llmrag.exception.EmbeddingException;
 import com.portfolio.llmrag.exception.InvalidDocumentStateException;
 import com.portfolio.llmrag.exception.InvalidFileException;
 import org.slf4j.Logger;
@@ -39,6 +40,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidDocumentStateException.class)
     public ResponseEntity<ApiResponse<Void>> invalidState(InvalidDocumentStateException e) {
         return respond(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(EmbeddingException.class)
+    public ResponseEntity<ApiResponse<Void>> embeddingFailed(EmbeddingException e) {
+        return respond(HttpStatus.SERVICE_UNAVAILABLE, e.getMessage());
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)

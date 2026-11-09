@@ -41,10 +41,13 @@ public class DocumentController {
             throws IOException {
         DocumentDto document = documentService.upload(file);
 
-        String message = document.status() == DocumentStatus.CHUNKED
-                ? "업로드, 텍스트 추출, 청크 분할이 완료되었습니다. ("
-                        + document.pageCount() + "쪽, 청크 " + document.chunkCount() + "개)"
-                : "업로드는 되었지만 처리에 실패했습니다: " + document.failReason();
+        String message = switch (document.status()) {
+            case INDEXED -> "업로드, 텍스트 추출, 청크 분할, 임베딩이 완료되었습니다. ("
+                    + document.pageCount() + "쪽, 청크 " + document.chunkCount() + "개)";
+            case CHUNKED -> "청크 분할까지 완료했지만 임베딩에 실패했습니다: " + document.failReason()
+                    + " (임베딩 서버를 확인한 뒤 POST /api/documents/" + document.id() + "/embeddings 로 다시 시도하세요)";
+            default -> "업로드는 되었지만 처리에 실패했습니다: " + document.failReason();
+        };
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(message, document));
     }
@@ -83,10 +86,20 @@ public class DocumentController {
         return ApiResponse.ok("청크 " + chunks.size() + "개", chunks);
     }
 
-    /** 저장된 페이지 텍스트로 청크를 다시 만든다 */
+    /** 저장된 페이지 텍스트로 청크를 다시 만들고 임베딩까지 한다 */
     @PostMapping("/{id}/chunks")
     public ApiResponse<DocumentDto> rechunk(@PathVariable("id") long id) {
         DocumentDto document = documentService.rechunk(id);
-        return ApiResponse.ok("청크를 다시 만들었습니다. (청크 " + document.chunkCount() + "개)", document);
+        String message = document.status() == DocumentStatus.INDEXED
+                ? "청크를 다시 만들고 임베딩했습니다. (청크 " + document.chunkCount() + "개)"
+                : "청크는 다시 만들었지만 임베딩에 실패했습니다: " + document.failReason();
+        return ApiResponse.ok(message, document);
+    }
+
+    /** 기존 청크로 임베딩만 다시 만든다 (임베딩 서버가 꺼져 있었을 때 등) */
+    @PostMapping("/{id}/embeddings")
+    public ApiResponse<DocumentDto> reembed(@PathVariable("id") long id) {
+        DocumentDto document = documentService.reembed(id);
+        return ApiResponse.ok("임베딩을 저장했습니다. (청크 " + document.chunkCount() + "개)", document);
     }
 }

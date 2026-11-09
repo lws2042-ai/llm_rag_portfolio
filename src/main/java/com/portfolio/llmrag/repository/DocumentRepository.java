@@ -110,6 +110,29 @@ public class DocumentRepository {
                 .addValue("id", id));
     }
 
+    public void markIndexed(long id) {
+        String sql = """
+                UPDATE documents
+                   SET status = :status, fail_reason = NULL, updated_at = SYSTIMESTAMP
+                 WHERE id = :id
+                """;
+        jdbc.update(sql, new MapSqlParameterSource()
+                .addValue("status", DocumentStatus.INDEXED.name())
+                .addValue("id", id));
+    }
+
+    /** 상태는 그대로 두고 실패 사유만 기록한다. (임베딩 실패처럼 다시 시도할 수 있는 경우) */
+    public void recordFailReason(long id, String reason) {
+        String sql = """
+                UPDATE documents
+                   SET fail_reason = :reason, updated_at = SYSTIMESTAMP
+                 WHERE id = :id
+                """;
+        jdbc.update(sql, new MapSqlParameterSource()
+                .addValue("reason", truncate(reason))
+                .addValue("id", id));
+    }
+
     public void markFailed(long id, String reason) {
         String sql = """
                 UPDATE documents

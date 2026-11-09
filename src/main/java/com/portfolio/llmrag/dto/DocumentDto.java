@@ -13,10 +13,10 @@ public record DocumentDto(
         String originalName,   // 원본 파일명 (답변 근거 표시용)
         String extension,      // .pdf, .txt
         long sizeBytes,
-        DocumentStatus status, // UPLOADED, EXTRACTED, CHUNKED, FAILED
+        DocumentStatus status, // UPLOADED, EXTRACTED, CHUNKED, INDEXED, FAILED
         Integer pageCount,     // 텍스트가 추출된 페이지 수
         Integer chunkCount,    // 분할된 청크 수
-        String failReason,     // 실패 사유 (FAILED 일 때만)
+        String failReason,     // 실패 사유 (FAILED, 또는 임베딩에 실패한 CHUNKED)
         LocalDateTime uploadedAt
 ) {
 

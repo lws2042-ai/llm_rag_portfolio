@@ -17,11 +17,11 @@ CREATE TABLE documents (
     uploaded_at    TIMESTAMP           DEFAULT SYSTIMESTAMP NOT NULL,
     updated_at     TIMESTAMP           DEFAULT SYSTIMESTAMP NOT NULL,
     CONSTRAINT uk_documents_stored_name UNIQUE (stored_name),
-    CONSTRAINT ck_documents_status CHECK (status IN ('UPLOADED', 'EXTRACTED', 'CHUNKED', 'FAILED'))
+    CONSTRAINT ck_documents_status CHECK (status IN ('UPLOADED', 'EXTRACTED', 'CHUNKED', 'INDEXED', 'FAILED'))
 );
 
 COMMENT ON TABLE  documents             IS '업로드 문서';
-COMMENT ON COLUMN documents.status      IS 'UPLOADED / EXTRACTED / CHUNKED / FAILED (임베딩 단계에서 INDEXED 추가 예정)';
+COMMENT ON COLUMN documents.status      IS 'UPLOADED / EXTRACTED / CHUNKED / INDEXED / FAILED';
 COMMENT ON COLUMN documents.fail_reason IS '텍스트 추출 실패 사유';
 
 -- 페이지별 추출 텍스트
@@ -41,7 +41,6 @@ COMMENT ON TABLE document_pages IS '문서 페이지별 추출 텍스트';
 
 -- 검색용 청크
 -- 청크는 페이지를 넘지 않으므로 page_number 를 답변 근거로 그대로 쓴다.
--- 임베딩 단계에서 벡터 컬럼을 추가할 예정.
 CREATE TABLE document_chunks (
     id           NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     document_id  NUMBER      NOT NULL,
@@ -49,6 +48,7 @@ CREATE TABLE document_chunks (
     page_number  NUMBER(10)  NOT NULL,
     content      CLOB        NOT NULL,
     char_count   NUMBER(10)  NOT NULL,
+    embedding    VECTOR(1024, FLOAT32),                       -- bge-m3 임베딩 (임베딩 전에는 NULL)
     CONSTRAINT fk_chunks_document FOREIGN KEY (document_id)
         REFERENCES documents (id) ON DELETE CASCADE,
     CONSTRAINT uk_chunks_document_index UNIQUE (document_id, chunk_index)
